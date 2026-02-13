@@ -191,8 +191,9 @@
   const screens = { challenge: document.getElementById('challenge'), results: document.getElementById('results') };
   let drawing = false;
   let points = [];
+  let strokes = [];
   let currentChallenge = null;
-  let dotsImageData = null; // snapshot of dots before user draws
+  let dotsImageData = null;
 
   // --- Draw challenges (freehand) ---
   const drawChallenges = [
@@ -402,11 +403,7 @@
     if (currentChallenge.type === 'catch') return;
     e.preventDefault();
     drawing = true;
-
-    if (currentChallenge.type === 'draw') {
-      points = [];
-      drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-    }
+    points = [];
 
     const p = getPos(e);
     points.push(p);
@@ -430,7 +427,11 @@
   }
 
   function endDraw(e) {
-    if (drawing) { e.preventDefault(); drawing = false; }
+    if (drawing) {
+      e.preventDefault();
+      drawing = false;
+      if (points.length > 1) strokes.push([...points]);
+    }
   }
 
   drawCanvas.addEventListener('mousedown', startDraw);
@@ -517,6 +518,7 @@
   // --- Clear ---
   function clearDrawing() {
     points = [];
+    strokes = [];
     drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
     if (currentChallenge.type === 'dots') {
       drawNumberedDots(drawCtx, currentChallenge.dots);
@@ -537,6 +539,7 @@
     stopBall();
     drawReference();
     points = [];
+    strokes = [];
     drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
 
     if (currentChallenge.type === 'catch') {
@@ -577,41 +580,34 @@
       overlayCanvas.style.display = '';
       statsBox.style.display = 'none';
 
+      // Draw reference shape (dim)
       if (currentChallenge.type === 'draw') {
         octx.strokeStyle = '#ccc';
         octx.fillStyle = '#ccc';
         octx.lineWidth = 2;
         currentChallenge.draw(octx);
-
-        if (points.length > 1) {
-          octx.beginPath();
-          octx.moveTo(points[0].x, points[0].y);
-          for (let i = 1; i < points.length; i++) octx.lineTo(points[i].x, points[i].y);
-          octx.strokeStyle = '#000';
-          octx.fillStyle = 'transparent';
-          octx.lineWidth = 2;
-          octx.lineCap = 'round';
-          octx.lineJoin = 'round';
-          octx.stroke();
-        }
       } else if (currentChallenge.type === 'dots') {
         octx.strokeStyle = '#ccc';
         octx.fillStyle = '#ccc';
         octx.lineWidth = 2;
         drawDotsConnected(octx, currentChallenge.dots);
-
-        if (points.length > 1) {
-          octx.beginPath();
-          octx.moveTo(points[0].x, points[0].y);
-          for (let i = 1; i < points.length; i++) octx.lineTo(points[i].x, points[i].y);
-          octx.strokeStyle = '#000';
-          octx.fillStyle = 'transparent';
-          octx.lineWidth = 2;
-          octx.lineCap = 'round';
-          octx.lineJoin = 'round';
-          octx.stroke();
-        }
       }
+
+      // Draw all user strokes
+      octx.strokeStyle = '#000';
+      octx.fillStyle = 'transparent';
+      octx.lineWidth = 2;
+      octx.lineCap = 'round';
+      octx.lineJoin = 'round';
+      // Include current in-progress stroke if any
+      const allStrokes = points.length > 1 ? [...strokes, points] : strokes;
+      allStrokes.forEach(s => {
+        if (s.length < 2) return;
+        octx.beginPath();
+        octx.moveTo(s[0].x, s[0].y);
+        for (let i = 1; i < s.length; i++) octx.lineTo(s[i].x, s[i].y);
+        octx.stroke();
+      });
     }
 
     showScreen('results');
@@ -620,7 +616,7 @@
   // --- Submit ---
   document.getElementById('submitBtn').addEventListener('click', () => {
     if (currentChallenge.type === 'catch') return;
-    if (points.length < 10) return;
+    if (strokes.length === 0 && points.length < 10) return;
     showResults();
   });
 
