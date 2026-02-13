@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>I'm Not A Robot</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Space Mono', monospace;
+    background: #000;
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+    max-width: 660px;
+    width: 100%;
+  }
+  .screen.active { display: flex; }
+
+  h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.5rem;
+  }
+
+  .btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 0.7rem 2rem;
+    border: 1px solid #fff;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    transition: all 0.15s;
+  }
+  .btn:hover {
+    background: #fff;
+    color: #000;
+  }
+  .btn:active {
+    transform: scale(0.97);
+  }
+
+  .btn-secondary {
+    border-color: #444;
+    color: #888;
+  }
+  .btn-secondary:hover {
+    background: #222;
+    color: #fff;
+    border-color: #444;
+  }
+
+  /* Challenge screen */
+  .challenge-area {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+    margin: 1rem 0;
+  }
+
+  .canvas-wrapper {
+    position: relative;
+  }
+  .canvas-wrapper label {
+    display: block;
+    font-weight: 700;
+    font-size: 0.75rem;
+    margin-bottom: 0.4rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  canvas {
+    border: 1px solid #333;
+    border-radius: 0;
+    background: #000;
+    cursor: crosshair;
+    touch-action: none;
+  }
+
+  .draw-label {
+    font-size: 0.85rem;
+    color: #888;
+    margin-top: 0.5rem;
+  }
+
+  .buttons-row {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .result-message {
+    font-size: 1.2rem;
+    color: #fff;
+    margin-bottom: 1.5rem;
+  }
+
+  #overlayCanvas {
+    cursor: default;
+    margin-bottom: 1.5rem;
+  }
+
+  @media (max-width: 500px) {
+    h1 { font-size: 1.6rem; }
+    .challenge-area { gap: 0.8rem; }
+    canvas { width: 200px; height: 200px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- CHALLENGE SCREEN (start screen) -->
+<div id="challenge" class="screen active">
+  <h1>I'm Not A Robot</h1>
+  <div class="challenge-area">
+    <div class="canvas-wrapper">
+      <label>Target</label>
+      <canvas id="referenceCanvas" width="220" height="220"></canvas>
+    </div>
+    <span class="draw-label" id="drawLabel">Draw the circle here:</span>
+    <div class="canvas-wrapper">
+      <canvas id="drawCanvas" width="220" height="220"></canvas>
+    </div>
+  </div>
+  <div class="buttons-row">
+    <button class="btn btn-secondary" id="clearBtn">Clear</button>
+    <button class="btn" id="submitBtn">Submit</button>
+  </div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div id="results" class="screen">
+  <p id="resultMessage" class="result-message">You are human, well done.</p>
+  <canvas id="overlayCanvas" width="220" height="220"></canvas>
+  <div class="buttons-row">
+    <button class="btn" id="retryBtn">Try Again</button>
+  </div>
+</div>
+
+<script>
+  // --- State ---
+  const screens = { challenge: document.getElementById('challenge'), results: document.getElementById('results') };
+  let drawing = false;
+  let points = [];
+  let currentShape = null;
+
+  // --- Shapes ---
+  const shapes = [
+    {
+      name: 'circle',
+      draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(110, 110, 75, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    },
+    {
+      name: 'square',
+      draw(ctx) {
+        ctx.strokeRect(40, 40, 140, 140);
+      }
+    },
+    {
+      name: 'triangle',
+      draw(ctx) {
+        ctx.beginPath();
+        ctx.moveTo(110, 30);
+        ctx.lineTo(195, 180);
+        ctx.lineTo(25, 180);
+        ctx.closePath();
+        ctx.stroke();
+      }
+    },
+    {
+      name: 'smiley face',
+      draw(ctx) {
+        // Head
+        ctx.beginPath();
+        ctx.arc(110, 110, 75, 0, Math.PI * 2);
+        ctx.stroke();
+        // Left eye
+        ctx.beginPath();
+        ctx.arc(85, 90, 8, 0, Math.PI * 2);
+        ctx.stroke();
+        // Right eye
+        ctx.beginPath();
+        ctx.arc(135, 90, 8, 0, Math.PI * 2);
+        ctx.stroke();
+        // Smile
+        ctx.beginPath();
+        ctx.arc(110, 115, 40, 0.2, Math.PI - 0.2);
+        ctx.stroke();
+      }
+    },
+    {
+      name: 'pig',
+      draw(ctx) {
+        // Head
+        ctx.beginPath();
+        ctx.arc(110, 115, 65, 0, Math.PI * 2);
+        ctx.stroke();
+        // Left ear
+        ctx.beginPath();
+        ctx.moveTo(65, 65);
+        ctx.lineTo(50, 35);
+        ctx.lineTo(80, 55);
+        ctx.stroke();
+        // Right ear
+        ctx.beginPath();
+        ctx.moveTo(155, 65);
+        ctx.lineTo(170, 35);
+        ctx.lineTo(140, 55);
+        ctx.stroke();
+        // Snout
+        ctx.beginPath();
+        ctx.ellipse(110, 130, 25, 18, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        // Nostrils
+        ctx.beginPath();
+        ctx.ellipse(100, 130, 5, 4, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.ellipse(120, 130, 5, 4, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        // Eyes
+        ctx.beginPath();
+        ctx.arc(88, 100, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(132, 100, 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    },
+    {
+      name: 'horse',
+      draw(ctx) {
+        // Head (long oval)
+        ctx.beginPath();
+        ctx.ellipse(110, 120, 40, 65, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        // Snout bump
+        ctx.beginPath();
+        ctx.ellipse(110, 175, 25, 18, 0, 0, Math.PI);
+        ctx.stroke();
+        // Left ear
+        ctx.beginPath();
+        ctx.moveTo(85, 60);
+        ctx.lineTo(75, 30);
+        ctx.lineTo(95, 50);
+        ctx.stroke();
+        // Right ear
+        ctx.beginPath();
+        ctx.moveTo(135, 60);
+        ctx.lineTo(145, 30);
+        ctx.lineTo(125, 50);
+        ctx.stroke();
+        // Eyes
+        ctx.beginPath();
+        ctx.arc(93, 100, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(127, 100, 5, 0, Math.PI * 2);
+        ctx.fill();
+        // Nostril dots
+        ctx.beginPath();
+        ctx.arc(100, 168, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(120, 168, 3, 0, Math.PI * 2);
+        ctx.fill();
+        // Mane
+        ctx.beginPath();
+        ctx.moveTo(70, 55);
+        ctx.quadraticCurveTo(55, 80, 68, 110);
+        ctx.stroke();
+      }
+    },
+    {
+      name: 'mouse',
+      draw(ctx) {
+        // Body / head (round)
+        ctx.beginPath();
+        ctx.arc(110, 120, 55, 0, Math.PI * 2);
+        ctx.stroke();
+        // Left ear (big circle)
+        ctx.beginPath();
+        ctx.arc(65, 70, 30, 0, Math.PI * 2);
+        ctx.stroke();
+        // Right ear
+        ctx.beginPath();
+        ctx.arc(155, 70, 30, 0, Math.PI * 2);
+        ctx.stroke();
+        // Eyes
+        ctx.beginPath();
+        ctx.arc(93, 110, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(127, 110, 5, 0, Math.PI * 2);
+        ctx.fill();
+        // Nose
+        ctx.beginPath();
+        ctx.arc(110, 130, 5, 0, Math.PI * 2);
+        ctx.fill();
+        // Whiskers left
+        ctx.beginPath();
+        ctx.moveTo(80, 135);
+        ctx.lineTo(40, 128);
+        ctx.moveTo(80, 140);
+        ctx.lineTo(40, 145);
+        ctx.stroke();
+        // Whiskers right
+        ctx.beginPath();
+        ctx.moveTo(140, 135);
+        ctx.lineTo(180, 128);
+        ctx.moveTo(140, 140);
+        ctx.lineTo(180, 145);
+        ctx.stroke();
+      }
+    }
+  ];
+
+  function pickRandomShape() {
+    currentShape = shapes[Math.floor(Math.random() * shapes.length)];
+  }
+
+  // --- Navigation ---
+  function showScreen(name) {
+    Object.values(screens).forEach(s => s.classList.remove('active'));
+    screens[name].classList.add('active');
+  }
+
+  // --- Reference drawing ---
+  const refCanvas = document.getElementById('referenceCanvas');
+  const refCtx = refCanvas.getContext('2d');
+  const drawLabel = document.getElementById('drawLabel');
+
+  function drawReference() {
+    refCtx.clearRect(0, 0, refCanvas.width, refCanvas.height);
+    refCtx.strokeStyle = '#fff';
+    refCtx.fillStyle = '#fff';
+    refCtx.lineWidth = 2;
+    currentShape.draw(refCtx);
+    drawLabel.textContent = 'Draw the ' + currentShape.name + ' here:';
+  }
+
+  // Pick shape and draw on load
+  pickRandomShape();
+  drawReference();
+
+  // --- Drawing canvas ---
+  const drawCanvas = document.getElementById('drawCanvas');
+  const drawCtx = drawCanvas.getContext('2d');
+
+  function getPos(e) {
+    const rect = drawCanvas.getBoundingClientRect();
+    const scaleX = drawCanvas.width / rect.width;
+    const scaleY = drawCanvas.height / rect.height;
+    if (e.touches) {
+      return { x: (e.touches[0].clientX - rect.left) * scaleX, y: (e.touches[0].clientY - rect.top) * scaleY };
+    }
+    return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+  }
+
+  function startDraw(e) {
+    e.preventDefault();
+    drawing = true;
+    points = [];
+    drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+    const p = getPos(e);
+    points.push(p);
+    drawCtx.beginPath();
+    drawCtx.moveTo(p.x, p.y);
+  }
+
+  function moveDraw(e) {
+    if (!drawing) return;
+    e.preventDefault();
+    const p = getPos(e);
+    points.push(p);
+    drawCtx.lineTo(p.x, p.y);
+    drawCtx.strokeStyle = '#fff';
+    drawCtx.lineWidth = 2;
+    drawCtx.lineCap = 'round';
+    drawCtx.lineJoin = 'round';
+    drawCtx.stroke();
+    drawCtx.beginPath();
+    drawCtx.moveTo(p.x, p.y);
+  }
+
+  function endDraw(e) {
+    if (drawing) {
+      e.preventDefault();
+      drawing = false;
+    }
+  }
+
+  drawCanvas.addEventListener('mousedown', startDraw);
+  drawCanvas.addEventListener('mousemove', moveDraw);
+  drawCanvas.addEventListener('mouseup', endDraw);
+  drawCanvas.addEventListener('mouseleave', endDraw);
+  drawCanvas.addEventListener('touchstart', startDraw);
+  drawCanvas.addEventListener('touchmove', moveDraw);
+  drawCanvas.addEventListener('touchend', endDraw);
+
+  function clearDrawing() {
+    points = [];
+    drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+  }
+
+  document.getElementById('clearBtn').addEventListener('click', clearDrawing);
+
+  // --- Submit ---
+  document.getElementById('submitBtn').addEventListener('click', () => {
+    if (points.length < 10) return;
+
+    const overlayCanvas = document.getElementById('overlayCanvas');
+    const octx = overlayCanvas.getContext('2d');
+    octx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+    // Reference shape (dim)
+    octx.strokeStyle = '#333';
+    octx.fillStyle = '#333';
+    octx.lineWidth = 2;
+    currentShape.draw(octx);
+
+    // User drawing
+    if (points.length > 1) {
+      octx.beginPath();
+      octx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) {
+        octx.lineTo(points[i].x, points[i].y);
+      }
+      octx.strokeStyle = '#fff';
+      octx.fillStyle = 'transparent';
+      octx.lineWidth = 2;
+      octx.lineCap = 'round';
+      octx.lineJoin = 'round';
+      octx.stroke();
+    }
+
+    showScreen('results');
+  });
+
+  // --- Retry ---
+  document.getElementById('retryBtn').addEventListener('click', () => {
+    pickRandomShape();
+    showScreen('challenge');
+    drawReference();
+    clearDrawing();
+  });
+</script>
+</body>
+</html>
