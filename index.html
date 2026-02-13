@@ -109,6 +109,123 @@
     margin-top: 0.5rem;
   }
 
+  /* Interactive challenge elements */
+  .interactive-box {
+    width: 220px;
+    min-height: 220px;
+    border: 1px solid #333;
+    background: #f5f0e8;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    gap: 1rem;
+  }
+
+  .interactive-box input[type="text"] {
+    font-family: 'Space Mono', monospace;
+    font-size: 1rem;
+    padding: 0.5rem;
+    border: 1px solid #999;
+    background: #fff;
+    color: #000;
+    text-align: center;
+    width: 80%;
+  }
+
+  .interactive-box .prompt-word {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #000;
+    letter-spacing: 0.1em;
+  }
+
+  .interactive-box .prompt-text {
+    font-size: 0.85rem;
+    color: #555;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  .interactive-box .math-problem {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #000;
+  }
+
+  /* Slider */
+  .slider-track {
+    width: 180px;
+    height: 8px;
+    background: #ddd;
+    position: relative;
+    cursor: pointer;
+    border: 1px solid #999;
+  }
+  .slider-thumb {
+    width: 16px;
+    height: 24px;
+    background: #000;
+    position: absolute;
+    top: -9px;
+    left: 0;
+    cursor: grab;
+  }
+  .slider-label {
+    font-size: 0.8rem;
+    color: #555;
+  }
+
+  /* Color grid */
+  .color-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .color-cell {
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.1s;
+  }
+  .color-cell:hover {
+    border-color: #000;
+  }
+
+  /* Timer circle */
+  .timer-display {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #000;
+  }
+  .timer-sub {
+    font-size: 0.8rem;
+    color: #555;
+  }
+
+  /* Fake words */
+  .word-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+  .word-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.9rem;
+    padding: 0.5rem;
+    border: 1px solid #999;
+    background: #fff;
+    color: #000;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .word-btn:hover {
+    background: #ddd;
+  }
+
   .buttons-row {
     display: flex;
     gap: 1rem;
@@ -164,11 +281,12 @@
       <canvas id="referenceCanvas" width="220" height="220"></canvas>
     </div>
     <span class="draw-label" id="drawLabel">Draw the circle here:</span>
-    <div class="canvas-wrapper">
+    <div class="canvas-wrapper" id="drawWrapper">
       <canvas id="drawCanvas" width="220" height="220"></canvas>
     </div>
+    <div class="interactive-box" id="interactiveBox"></div>
   </div>
-  <div class="buttons-row">
+  <div class="buttons-row" id="buttonsRow">
     <button class="btn btn-secondary" id="clearBtn">Clear</button>
     <button class="btn" id="submitBtn">Submit</button>
   </div>
@@ -242,6 +360,248 @@
         ctx.beginPath(); ctx.arc(110, 130, 5, 0, Math.PI * 2); ctx.fill();
         ctx.beginPath(); ctx.moveTo(80, 135); ctx.lineTo(40, 128); ctx.moveTo(80, 140); ctx.lineTo(40, 145); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(140, 135); ctx.lineTo(180, 128); ctx.moveTo(140, 140); ctx.lineTo(180, 145); ctx.stroke();
+      }
+    },
+    {
+      // Horse side profile
+      type: 'draw', name: 'horse',
+      draw(ctx) {
+        // Head
+        ctx.beginPath();
+        ctx.moveTo(25, 80);
+        ctx.quadraticCurveTo(20, 105, 30, 120);
+        ctx.quadraticCurveTo(35, 130, 45, 125);
+        ctx.quadraticCurveTo(50, 115, 50, 105);
+        ctx.quadraticCurveTo(55, 90, 50, 75);
+        ctx.quadraticCurveTo(45, 60, 35, 55);
+        ctx.quadraticCurveTo(25, 55, 25, 80);
+        ctx.stroke();
+        // Ear
+        ctx.beginPath();
+        ctx.moveTo(38, 58);
+        ctx.lineTo(42, 40);
+        ctx.lineTo(48, 58);
+        ctx.stroke();
+        // Eye
+        ctx.beginPath();
+        ctx.arc(38, 80, 3, 0, Math.PI * 2);
+        ctx.fill();
+        // Nostril
+        ctx.beginPath();
+        ctx.arc(30, 112, 2, 0, Math.PI * 2);
+        ctx.fill();
+        // Neck + body
+        ctx.beginPath();
+        ctx.moveTo(50, 75);
+        ctx.quadraticCurveTo(80, 60, 100, 80);
+        ctx.quadraticCurveTo(140, 85, 170, 90);
+        ctx.quadraticCurveTo(190, 95, 195, 110);
+        ctx.stroke();
+        // Belly
+        ctx.beginPath();
+        ctx.moveTo(50, 125);
+        ctx.quadraticCurveTo(70, 140, 90, 150);
+        ctx.quadraticCurveTo(130, 160, 170, 150);
+        ctx.quadraticCurveTo(185, 145, 190, 130);
+        ctx.stroke();
+        // Front leg
+        ctx.beginPath();
+        ctx.moveTo(80, 148);
+        ctx.lineTo(75, 195);
+        ctx.lineTo(85, 195);
+        ctx.lineTo(90, 148);
+        ctx.stroke();
+        // Back leg
+        ctx.beginPath();
+        ctx.moveTo(165, 145);
+        ctx.lineTo(160, 195);
+        ctx.lineTo(170, 195);
+        ctx.lineTo(175, 140);
+        ctx.stroke();
+        // Tail
+        ctx.beginPath();
+        ctx.moveTo(195, 108);
+        ctx.quadraticCurveTo(210, 95, 205, 115);
+        ctx.quadraticCurveTo(200, 130, 195, 120);
+        ctx.stroke();
+        // Mane
+        ctx.beginPath();
+        ctx.moveTo(45, 58);
+        ctx.quadraticCurveTo(60, 50, 75, 55);
+        ctx.quadraticCurveTo(85, 58, 95, 70);
+        ctx.stroke();
+      }
+    },
+    {
+      // Pig side profile
+      type: 'draw', name: 'pig (side)',
+      draw(ctx) {
+        // Body (big oval)
+        ctx.beginPath();
+        ctx.ellipse(120, 120, 70, 50, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        // Head
+        ctx.beginPath();
+        ctx.arc(45, 110, 35, 0, Math.PI * 2);
+        ctx.stroke();
+        // Snout
+        ctx.beginPath();
+        ctx.ellipse(15, 115, 12, 9, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        // Nostrils
+        ctx.beginPath();
+        ctx.arc(12, 113, 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(18, 113, 2, 0, Math.PI * 2);
+        ctx.fill();
+        // Eye
+        ctx.beginPath();
+        ctx.arc(40, 102, 4, 0, Math.PI * 2);
+        ctx.fill();
+        // Ear
+        ctx.beginPath();
+        ctx.moveTo(50, 82);
+        ctx.lineTo(42, 65);
+        ctx.lineTo(58, 75);
+        ctx.closePath();
+        ctx.stroke();
+        // Front legs
+        ctx.beginPath();
+        ctx.moveTo(80, 165);
+        ctx.lineTo(78, 200);
+        ctx.moveTo(95, 168);
+        ctx.lineTo(93, 200);
+        ctx.stroke();
+        // Back legs
+        ctx.beginPath();
+        ctx.moveTo(150, 165);
+        ctx.lineTo(148, 200);
+        ctx.moveTo(165, 163);
+        ctx.lineTo(163, 200);
+        ctx.stroke();
+        // Curly tail
+        ctx.beginPath();
+        ctx.moveTo(190, 105);
+        ctx.quadraticCurveTo(205, 95, 200, 85);
+        ctx.quadraticCurveTo(195, 78, 205, 75);
+        ctx.stroke();
+      }
+    },
+    {
+      // Mouse side profile
+      type: 'draw', name: 'mouse (side)',
+      draw(ctx) {
+        // Body
+        ctx.beginPath();
+        ctx.ellipse(120, 130, 65, 40, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        // Head
+        ctx.beginPath();
+        ctx.ellipse(55, 115, 30, 28, -0.3, 0, Math.PI * 2);
+        ctx.stroke();
+        // Big ear
+        ctx.beginPath();
+        ctx.arc(55, 78, 18, 0, Math.PI * 2);
+        ctx.stroke();
+        // Eye
+        ctx.beginPath();
+        ctx.arc(42, 108, 4, 0, Math.PI * 2);
+        ctx.fill();
+        // Nose
+        ctx.beginPath();
+        ctx.arc(27, 118, 3, 0, Math.PI * 2);
+        ctx.fill();
+        // Whiskers
+        ctx.beginPath();
+        ctx.moveTo(30, 120);
+        ctx.lineTo(8, 112);
+        ctx.moveTo(30, 124);
+        ctx.lineTo(8, 128);
+        ctx.moveTo(30, 128);
+        ctx.lineTo(10, 140);
+        ctx.stroke();
+        // Legs
+        ctx.beginPath();
+        ctx.moveTo(85, 165);
+        ctx.lineTo(83, 195);
+        ctx.moveTo(100, 168);
+        ctx.lineTo(98, 195);
+        ctx.moveTo(145, 168);
+        ctx.lineTo(143, 195);
+        ctx.moveTo(160, 165);
+        ctx.lineTo(158, 195);
+        ctx.stroke();
+        // Long tail
+        ctx.beginPath();
+        ctx.moveTo(185, 125);
+        ctx.quadraticCurveTo(210, 110, 205, 140);
+        ctx.quadraticCurveTo(200, 160, 210, 170);
+        ctx.stroke();
+      }
+    },
+    {
+      // Cat side profile
+      type: 'draw', name: 'cat',
+      draw(ctx) {
+        // Body
+        ctx.beginPath();
+        ctx.ellipse(115, 125, 60, 40, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        // Head
+        ctx.beginPath();
+        ctx.arc(50, 100, 28, 0, Math.PI * 2);
+        ctx.stroke();
+        // Left ear
+        ctx.beginPath();
+        ctx.moveTo(35, 78);
+        ctx.lineTo(30, 55);
+        ctx.lineTo(48, 72);
+        ctx.stroke();
+        // Right ear
+        ctx.beginPath();
+        ctx.moveTo(55, 75);
+        ctx.lineTo(60, 52);
+        ctx.lineTo(68, 78);
+        ctx.stroke();
+        // Eye
+        ctx.beginPath();
+        ctx.ellipse(42, 97, 5, 4, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(42, 97, 2, 0, Math.PI * 2);
+        ctx.fill();
+        // Nose
+        ctx.beginPath();
+        ctx.moveTo(28, 105);
+        ctx.lineTo(25, 110);
+        ctx.lineTo(31, 110);
+        ctx.closePath();
+        ctx.fill();
+        // Whiskers
+        ctx.beginPath();
+        ctx.moveTo(28, 110);
+        ctx.lineTo(5, 105);
+        ctx.moveTo(28, 112);
+        ctx.lineTo(5, 115);
+        ctx.stroke();
+        // Legs
+        ctx.beginPath();
+        ctx.moveTo(80, 160);
+        ctx.lineTo(78, 198);
+        ctx.moveTo(95, 163);
+        ctx.lineTo(93, 198);
+        ctx.moveTo(140, 163);
+        ctx.lineTo(138, 198);
+        ctx.moveTo(155, 160);
+        ctx.lineTo(153, 198);
+        ctx.stroke();
+        // Tail (curving up)
+        ctx.beginPath();
+        ctx.moveTo(175, 115);
+        ctx.quadraticCurveTo(200, 100, 200, 70);
+        ctx.quadraticCurveTo(200, 50, 190, 45);
+        ctx.stroke();
       }
     }
   ];
@@ -318,7 +678,36 @@
     { type: 'catch', name: 'dot', radius: 10, speed: 4, clicks: 5 },
   ];
 
-  const allChallenges = [...drawChallenges, ...dotChallenges, ...catchChallenges];
+  // --- Interactive challenges ---
+  const words = ['elephant', 'rainbow', 'kitchen', 'bicycle', 'penguin', 'blanket', 'thunder', 'dolphin', 'lantern', 'giraffe'];
+  const mathProblems = [
+    { q: '7 + 3', a: 10 }, { q: '12 - 5', a: 7 }, { q: '4 x 6', a: 24 },
+    { q: '9 + 8', a: 17 }, { q: '15 - 9', a: 6 }, { q: '3 x 7', a: 21 },
+    { q: '11 + 4', a: 15 }, { q: '20 - 13', a: 7 }, { q: '5 x 5', a: 25 }
+  ];
+  const fakeWordSets = [
+    { real: ['lemon', 'carpet', 'window'], fake: 'flonkle' },
+    { real: ['garden', 'silver', 'bottle'], fake: 'grindop' },
+    { real: ['planet', 'bridge', 'forest'], fake: 'plumbot' },
+    { real: ['candle', 'velvet', 'pillow'], fake: 'snorble' },
+    { real: ['basket', 'tunnel', 'marble'], fake: 'crumpit' },
+    { real: ['rocket', 'hammer', 'pencil'], fake: 'whibble' },
+    { real: ['sunset', 'anchor', 'muffin'], fake: 'drongle' },
+    { real: ['copper', 'jacket', 'turtle'], fake: 'flargen' },
+  ];
+
+  const interactiveChallenges = [
+    { type: 'backward' },
+    { type: 'math_wrong' },
+    { type: 'slider' },
+    { type: 'color' },
+    { type: 'timer' },
+    { type: 'straight_line' },
+    { type: 'fake_word' },
+    { type: 'shake' },
+  ];
+
+  const allChallenges = [...drawChallenges, ...dotChallenges, ...catchChallenges, ...interactiveChallenges];
 
   function pickRandomChallenge() {
     currentChallenge = allChallenges[Math.floor(Math.random() * allChallenges.length)];
@@ -327,6 +716,14 @@
   // --- Catch state ---
   let ballX, ballY, ballDX, ballDY, catchCount, catchTarget, animFrame;
   let totalClicks, catchStartTime;
+
+  // --- Interactive state ---
+  let interactiveResult = null;
+  let timerRunning = false;
+  let timerStart = 0;
+  let timerInterval = null;
+  let shakePoints = [];
+  let shakeAnimFrame = null;
 
   // --- Navigation ---
   function showScreen(name) {
@@ -341,6 +738,9 @@
   const drawLabel = document.getElementById('drawLabel');
   const drawCanvas = document.getElementById('drawCanvas');
   const drawCtx = drawCanvas.getContext('2d');
+  const drawWrapper = document.getElementById('drawWrapper');
+  const interactiveBox = document.getElementById('interactiveBox');
+  const buttonsRow = document.getElementById('buttonsRow');
 
   function drawDotsConnected(ctx, dots) {
     if (dots.length < 2) return;
@@ -369,25 +769,6 @@
     });
   }
 
-  function drawReference() {
-    refCtx.clearRect(0, 0, refCanvas.width, refCanvas.height);
-    refCtx.strokeStyle = '#000';
-    refCtx.fillStyle = '#000';
-    refCtx.lineWidth = 2;
-
-    if (currentChallenge.type === 'draw') {
-      refWrapper.style.display = '';
-      currentChallenge.draw(refCtx);
-      drawLabel.textContent = 'Draw the ' + currentChallenge.name + ' here:';
-    } else if (currentChallenge.type === 'dots') {
-      refWrapper.style.display = 'none';
-      drawLabel.textContent = 'Connect the dots:';
-    } else if (currentChallenge.type === 'catch') {
-      refWrapper.style.display = 'none';
-      drawLabel.textContent = 'Click the bouncing dot ' + currentChallenge.clicks + ' times:';
-    }
-  }
-
   function getPos(e) {
     const rect = drawCanvas.getBoundingClientRect();
     const scaleX = drawCanvas.width / rect.width;
@@ -398,9 +779,9 @@
     return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
   }
 
-  // --- Freehand drawing (works for draw and dots types) ---
+  // --- Freehand drawing ---
   function startDraw(e) {
-    if (currentChallenge.type === 'catch') return;
+    if (!['draw', 'dots', 'straight_line', 'shake'].includes(currentChallenge.type)) return;
     e.preventDefault();
     drawing = true;
     points = [];
@@ -412,10 +793,16 @@
   }
 
   function moveDraw(e) {
-    if (currentChallenge.type === 'catch' || !drawing) return;
+    if (!drawing) return;
+    if (!['draw', 'dots', 'straight_line', 'shake'].includes(currentChallenge.type)) return;
     e.preventDefault();
     const p = getPos(e);
     points.push(p);
+
+    if (currentChallenge.type === 'shake') {
+      shakePoints.push(p);
+    }
+
     drawCtx.lineTo(p.x, p.y);
     drawCtx.strokeStyle = '#000';
     drawCtx.lineWidth = 2;
@@ -444,9 +831,7 @@
 
   // --- Catch: bouncing ball ---
   function initBall() {
-    const r = currentChallenge.radius;
-    ballX = 110;
-    ballY = 110;
+    ballX = 110; ballY = 110;
     const angle = Math.random() * Math.PI * 2;
     const spd = currentChallenge.speed;
     ballDX = Math.cos(angle) * spd;
@@ -461,47 +846,31 @@
     if (currentChallenge.type !== 'catch') return;
     const w = drawCanvas.width, h = drawCanvas.height;
     const r = currentChallenge.radius;
-
-    ballX += ballDX;
-    ballY += ballDY;
-
+    ballX += ballDX; ballY += ballDY;
     if (ballX - r <= 0 || ballX + r >= w) { ballDX *= -1; ballX = Math.max(r, Math.min(w - r, ballX)); }
     if (ballY - r <= 0 || ballY + r >= h) { ballDY *= -1; ballY = Math.max(r, Math.min(h - r, ballY)); }
-
     drawCtx.clearRect(0, 0, w, h);
-
-    // Draw ball
     drawCtx.beginPath();
     drawCtx.arc(ballX, ballY, r, 0, Math.PI * 2);
     drawCtx.fillStyle = '#000';
     drawCtx.fill();
-
-    // Draw counter
     drawCtx.fillStyle = '#999';
     drawCtx.font = '12px Space Mono, monospace';
     drawCtx.textAlign = 'right';
     drawCtx.textBaseline = 'top';
     drawCtx.fillText(catchCount + ' / ' + catchTarget, w - 8, 8);
-
     animFrame = requestAnimationFrame(animateBall);
   }
 
-  function stopBall() {
-    if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
-  }
+  function stopBall() { if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; } }
 
   function handleCatchAt(p) {
     totalClicks++;
     const dist = Math.sqrt((p.x - ballX) ** 2 + (p.y - ballY) ** 2);
     if (dist <= currentChallenge.radius + 5) {
       catchCount++;
-      ballDX *= 1.15;
-      ballDY *= 1.15;
-
-      if (catchCount >= catchTarget) {
-        stopBall();
-        showResults();
-      }
+      ballDX *= 1.15; ballDY *= 1.15;
+      if (catchCount >= catchTarget) { stopBall(); showResults(); }
     }
   }
 
@@ -515,45 +884,247 @@
     handleCatchAt(getPos(e));
   });
 
+  // --- Interactive challenge setup ---
+  function setupInteractive() {
+    interactiveBox.innerHTML = '';
+    interactiveBox.style.display = 'flex';
+    drawWrapper.style.display = 'none';
+    refWrapper.style.display = 'none';
+    interactiveResult = null;
+
+    const type = currentChallenge.type;
+
+    if (type === 'backward') {
+      const word = words[Math.floor(Math.random() * words.length)];
+      currentChallenge._word = word;
+      interactiveBox.innerHTML =
+        '<p class="prompt-text">Type this word backwards:</p>' +
+        '<p class="prompt-word">' + word + '</p>' +
+        '<input type="text" id="backwardInput" autocomplete="off" autocapitalize="off">';
+      drawLabel.textContent = 'Type it backwards to prove you\'re human:';
+      buttonsRow.style.display = '';
+      setTimeout(() => document.getElementById('backwardInput')?.focus(), 100);
+
+    } else if (type === 'math_wrong') {
+      const prob = mathProblems[Math.floor(Math.random() * mathProblems.length)];
+      currentChallenge._problem = prob;
+      interactiveBox.innerHTML =
+        '<p class="prompt-text">Answer this WRONG:</p>' +
+        '<p class="math-problem">' + prob.q + ' = ?</p>' +
+        '<input type="text" id="mathInput" autocomplete="off" inputmode="numeric">' +
+        '<p class="prompt-text">(any wrong answer will do)</p>';
+      drawLabel.textContent = 'A robot can\'t answer wrong on purpose:';
+      buttonsRow.style.display = '';
+      setTimeout(() => document.getElementById('mathInput')?.focus(), 100);
+
+    } else if (type === 'slider') {
+      interactiveBox.innerHTML =
+        '<p class="prompt-text">Drag the slider to exactly 50%:</p>' +
+        '<div class="slider-track" id="sliderTrack"><div class="slider-thumb" id="sliderThumb"></div></div>' +
+        '<p class="slider-label" id="sliderVal">0%</p>';
+      drawLabel.textContent = 'Humans can never get exactly 50%:';
+      buttonsRow.style.display = '';
+      setupSlider();
+
+    } else if (type === 'color') {
+      const baseHue = Math.floor(Math.random() * 360);
+      const baseSat = 50 + Math.floor(Math.random() * 30);
+      const baseLight = 45 + Math.floor(Math.random() * 15);
+      const oddIndex = Math.floor(Math.random() * 16);
+      const cells = [];
+      for (let i = 0; i < 16; i++) {
+        const isOdd = i === oddIndex;
+        const hShift = isOdd ? 12 + Math.floor(Math.random() * 8) : 0;
+        const lShift = isOdd ? 8 + Math.floor(Math.random() * 5) : 0;
+        const color = 'hsl(' + (baseHue + hShift) + ',' + baseSat + '%,' + (baseLight + lShift) + '%)';
+        cells.push('<div class="color-cell" data-odd="' + isOdd + '" style="background:' + color + '"></div>');
+      }
+      interactiveBox.innerHTML =
+        '<p class="prompt-text">Click the slightly different color:</p>' +
+        '<div class="color-grid">' + cells.join('') + '</div>';
+      drawLabel.textContent = 'Find the odd one out:';
+      buttonsRow.style.display = 'none';
+      interactiveBox.querySelectorAll('.color-cell').forEach(cell => {
+        cell.addEventListener('click', () => {
+          const correct = cell.dataset.odd === 'true';
+          interactiveResult = { correct, type: 'color' };
+          showResults();
+        });
+      });
+
+    } else if (type === 'timer') {
+      interactiveBox.innerHTML =
+        '<p class="prompt-text">Wait exactly 3 seconds, then click:</p>' +
+        '<div class="timer-display" id="timerDisplay">0.000</div>' +
+        '<button class="word-btn" id="timerBtn">Start</button>' +
+        '<p class="timer-sub" id="timerSub">Click Start, then click Stop at 3.000s</p>';
+      drawLabel.textContent = 'Humans have terrible internal clocks:';
+      buttonsRow.style.display = 'none';
+
+      let phase = 'ready'; // ready -> running -> done
+      const btn = interactiveBox.querySelector('#timerBtn');
+      const display = interactiveBox.querySelector('#timerDisplay');
+
+      btn.addEventListener('click', () => {
+        if (phase === 'ready') {
+          phase = 'running';
+          btn.textContent = 'Stop';
+          timerStart = Date.now();
+          timerInterval = setInterval(() => {
+            display.textContent = ((Date.now() - timerStart) / 1000).toFixed(3);
+          }, 16);
+        } else if (phase === 'running') {
+          phase = 'done';
+          clearInterval(timerInterval);
+          const elapsed = (Date.now() - timerStart) / 1000;
+          display.textContent = elapsed.toFixed(3);
+          interactiveResult = { elapsed, diff: Math.abs(elapsed - 3), type: 'timer' };
+          setTimeout(() => showResults(), 500);
+        }
+      });
+
+    } else if (type === 'fake_word') {
+      const set = fakeWordSets[Math.floor(Math.random() * fakeWordSets.length)];
+      const allWords = [...set.real, set.fake];
+      // Shuffle
+      for (let i = allWords.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [allWords[i], allWords[j]] = [allWords[j], allWords[i]];
+      }
+      currentChallenge._fake = set.fake;
+      const btns = allWords.map(w =>
+        '<button class="word-btn" data-word="' + w + '">' + w + '</button>'
+      ).join('');
+      interactiveBox.innerHTML =
+        '<p class="prompt-text">Which word is fake?</p>' +
+        '<div class="word-options">' + btns + '</div>';
+      drawLabel.textContent = 'Only a human would know:';
+      buttonsRow.style.display = 'none';
+      interactiveBox.querySelectorAll('.word-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const correct = btn.dataset.word === set.fake;
+          interactiveResult = { correct, picked: btn.dataset.word, fake: set.fake, type: 'fake_word' };
+          showResults();
+        });
+      });
+    }
+  }
+
+  // --- Slider logic ---
+  function setupSlider() {
+    const track = document.getElementById('sliderTrack');
+    const thumb = document.getElementById('sliderThumb');
+    const label = document.getElementById('sliderVal');
+    let dragging = false;
+    currentChallenge._sliderVal = 0;
+
+    function updateSlider(clientX) {
+      const rect = track.getBoundingClientRect();
+      let pct = (clientX - rect.left) / rect.width;
+      pct = Math.max(0, Math.min(1, pct));
+      thumb.style.left = (pct * (rect.width - 16)) + 'px';
+      currentChallenge._sliderVal = pct;
+      label.textContent = Math.round(pct * 100) + '%';
+    }
+
+    track.addEventListener('mousedown', (e) => { dragging = true; updateSlider(e.clientX); });
+    document.addEventListener('mousemove', (e) => { if (dragging) updateSlider(e.clientX); });
+    document.addEventListener('mouseup', () => { dragging = false; });
+    track.addEventListener('touchstart', (e) => { dragging = true; updateSlider(e.touches[0].clientX); });
+    document.addEventListener('touchmove', (e) => { if (dragging) updateSlider(e.touches[0].clientX); });
+    document.addEventListener('touchend', () => { dragging = false; });
+  }
+
+  // --- Setup for straight line and shake (use canvas) ---
+  function setupCanvasInteractive() {
+    if (currentChallenge.type === 'straight_line') {
+      drawLabel.textContent = 'Draw a perfectly straight line:';
+      refWrapper.style.display = 'none';
+      // Draw start and end dots
+      drawCtx.fillStyle = '#999';
+      drawCtx.beginPath();
+      drawCtx.arc(30, 110, 6, 0, Math.PI * 2);
+      drawCtx.fill();
+      drawCtx.beginPath();
+      drawCtx.arc(190, 110, 6, 0, Math.PI * 2);
+      drawCtx.fill();
+      drawCtx.fillStyle = '#aaa';
+      drawCtx.font = '10px Space Mono, monospace';
+      drawCtx.textAlign = 'center';
+      drawCtx.fillText('A', 30, 95);
+      drawCtx.fillText('B', 190, 95);
+    } else if (currentChallenge.type === 'shake') {
+      drawLabel.textContent = 'Scribble randomly inside the box:';
+      refWrapper.style.display = 'none';
+      shakePoints = [];
+    }
+  }
+
   // --- Clear ---
   function clearDrawing() {
     points = [];
     strokes = [];
+    shakePoints = [];
     drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
     if (currentChallenge.type === 'dots') {
       drawNumberedDots(drawCtx, currentChallenge.dots);
       dotsImageData = drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height);
     } else if (currentChallenge.type === 'catch') {
-      stopBall();
-      initBall();
-      animateBall();
+      stopBall(); initBall(); animateBall();
+    } else if (currentChallenge.type === 'straight_line' || currentChallenge.type === 'shake') {
+      setupCanvasInteractive();
     }
   }
 
   document.getElementById('clearBtn').addEventListener('click', clearDrawing);
 
   // --- Setup challenge ---
-  const buttonsRow = document.querySelector('.buttons-row');
-
   function setupChallenge() {
     stopBall();
-    drawReference();
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     points = [];
     strokes = [];
+    shakePoints = [];
+    interactiveResult = null;
+
+    const type = currentChallenge.type;
+    const isCanvas = ['draw', 'dots', 'catch', 'straight_line', 'shake'].includes(type);
+    const isInteractive = ['backward', 'math_wrong', 'slider', 'color', 'timer', 'fake_word'].includes(type);
+
+    drawWrapper.style.display = isCanvas ? '' : 'none';
+    interactiveBox.style.display = isInteractive ? 'flex' : 'none';
     drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
 
-    if (currentChallenge.type === 'catch') {
-      drawCanvas.style.cursor = 'pointer';
-      buttonsRow.style.display = 'none';
-      initBall();
-      animateBall();
-    } else {
+    refCtx.clearRect(0, 0, refCanvas.width, refCanvas.height);
+    refCtx.strokeStyle = '#000';
+    refCtx.fillStyle = '#000';
+    refCtx.lineWidth = 2;
+
+    if (type === 'draw') {
+      refWrapper.style.display = '';
+      currentChallenge.draw(refCtx);
+      drawLabel.textContent = 'Draw the ' + currentChallenge.name + ' here:';
       drawCanvas.style.cursor = 'crosshair';
       buttonsRow.style.display = '';
-      if (currentChallenge.type === 'dots') {
-        drawNumberedDots(drawCtx, currentChallenge.dots);
-        dotsImageData = drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height);
-      }
+    } else if (type === 'dots') {
+      refWrapper.style.display = 'none';
+      drawLabel.textContent = 'Connect the dots:';
+      drawCanvas.style.cursor = 'crosshair';
+      buttonsRow.style.display = '';
+      drawNumberedDots(drawCtx, currentChallenge.dots);
+      dotsImageData = drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height);
+    } else if (type === 'catch') {
+      refWrapper.style.display = 'none';
+      drawLabel.textContent = 'Click the bouncing dot ' + currentChallenge.clicks + ' times:';
+      drawCanvas.style.cursor = 'pointer';
+      buttonsRow.style.display = 'none';
+      initBall(); animateBall();
+    } else if (type === 'straight_line' || type === 'shake') {
+      drawCanvas.style.cursor = 'crosshair';
+      buttonsRow.style.display = '';
+      setupCanvasInteractive();
+    } else if (isInteractive) {
+      setupInteractive();
     }
   }
 
@@ -564,42 +1135,154 @@
   // --- Show results ---
   function showResults() {
     stopBall();
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+
     const overlayCanvas = document.getElementById('overlayCanvas');
     const octx = overlayCanvas.getContext('2d');
     octx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
     const statsEl = document.getElementById('catchStats');
     const statsBox = document.getElementById('catchStatsBox');
+    const resultMsg = document.getElementById('resultMessage');
 
-    if (currentChallenge.type === 'catch') {
+    resultMsg.textContent = 'You are human, well done.';
+    const type = currentChallenge.type;
+
+    if (type === 'catch') {
       overlayCanvas.style.display = 'none';
       statsBox.style.display = 'flex';
       const elapsed = ((Date.now() - catchStartTime) / 1000).toFixed(1);
       const accuracy = Math.round((catchCount / totalClicks) * 100);
       statsEl.innerHTML = 'Time: ' + elapsed + 's<br>Accuracy: ' + catchCount + '/' + totalClicks + ' (' + accuracy + '%)';
-    } else {
-      overlayCanvas.style.display = '';
-      statsBox.style.display = 'none';
 
-      // Draw reference shape (dim)
-      if (currentChallenge.type === 'draw') {
-        octx.strokeStyle = '#ccc';
-        octx.fillStyle = '#ccc';
-        octx.lineWidth = 2;
-        currentChallenge.draw(octx);
-      } else if (currentChallenge.type === 'dots') {
-        octx.strokeStyle = '#ccc';
-        octx.fillStyle = '#ccc';
-        octx.lineWidth = 2;
-        drawDotsConnected(octx, currentChallenge.dots);
+    } else if (type === 'backward') {
+      overlayCanvas.style.display = 'none';
+      statsBox.style.display = 'flex';
+      const input = document.getElementById('backwardInput');
+      const answer = input ? input.value.toLowerCase().trim() : '';
+      const expected = currentChallenge._word.split('').reverse().join('');
+      const correct = answer === expected;
+      statsEl.innerHTML = 'You typed: ' + (answer || '(nothing)') + '<br>Expected: ' + expected + '<br>' + (correct ? 'Correct!' : 'Wrong, but still human.');
+
+    } else if (type === 'math_wrong') {
+      overlayCanvas.style.display = 'none';
+      statsBox.style.display = 'flex';
+      const input = document.getElementById('mathInput');
+      const answer = input ? parseInt(input.value.trim()) : NaN;
+      const correct = !isNaN(answer) && answer !== currentChallenge._problem.a;
+      if (isNaN(answer)) {
+        statsEl.innerHTML = 'You didn\'t answer.<br>That\'s... also wrong. Human.';
+      } else if (correct) {
+        statsEl.innerHTML = 'You said: ' + answer + '<br>Correct answer: ' + currentChallenge._problem.a + '<br>Wrong on purpose. Very human.';
+      } else {
+        statsEl.innerHTML = 'You said: ' + answer + '<br>That\'s the RIGHT answer!<br>Suspicious...';
+        resultMsg.textContent = 'Hmm, suspiciously correct.';
       }
 
-      // Draw all user strokes
+    } else if (type === 'slider') {
+      overlayCanvas.style.display = 'none';
+      statsBox.style.display = 'flex';
+      const val = currentChallenge._sliderVal || 0;
+      const pct = Math.round(val * 100);
+      const diff = Math.abs(pct - 50);
+      if (diff === 0) {
+        statsEl.innerHTML = 'You got: ' + pct + '%<br>Exactly 50%?!<br>That\'s suspicious...';
+        resultMsg.textContent = 'Too perfect. Suspicious.';
+      } else {
+        statsEl.innerHTML = 'You got: ' + pct + '%<br>Off by ' + diff + '%<br>Perfectly imperfect.';
+      }
+
+    } else if (type === 'color') {
+      overlayCanvas.style.display = 'none';
+      statsBox.style.display = 'flex';
+      if (interactiveResult && interactiveResult.correct) {
+        statsEl.innerHTML = 'You found it!<br>Good eyes, human.';
+      } else {
+        statsEl.innerHTML = 'Wrong square.<br>But robots don\'t guess, so... human.';
+      }
+
+    } else if (type === 'timer') {
+      overlayCanvas.style.display = 'none';
+      statsBox.style.display = 'flex';
+      if (interactiveResult) {
+        const diff = interactiveResult.diff;
+        const elapsed = interactiveResult.elapsed.toFixed(3);
+        if (diff < 0.01) {
+          statsEl.innerHTML = 'You got: ' + elapsed + 's<br>Off by ' + (diff * 1000).toFixed(0) + 'ms<br>Suspiciously accurate...';
+          resultMsg.textContent = 'Too precise. Are you a clock?';
+        } else if (diff < 0.3) {
+          statsEl.innerHTML = 'You got: ' + elapsed + 's<br>Off by ' + (diff * 1000).toFixed(0) + 'ms<br>Pretty good for a human!';
+        } else {
+          statsEl.innerHTML = 'You got: ' + elapsed + 's<br>Off by ' + diff.toFixed(2) + 's<br>Terrible timing. Definitely human.';
+        }
+      }
+
+    } else if (type === 'fake_word') {
+      overlayCanvas.style.display = 'none';
+      statsBox.style.display = 'flex';
+      if (interactiveResult && interactiveResult.correct) {
+        statsEl.innerHTML = 'You picked: ' + interactiveResult.picked + '<br>That\'s the fake one!<br>Good instincts, human.';
+      } else {
+        statsEl.innerHTML = 'You picked: ' + (interactiveResult ? interactiveResult.picked : '?') + '<br>The fake was: ' + (interactiveResult ? interactiveResult.fake : '?') + '<br>Wrong, but humans make mistakes.';
+      }
+
+    } else if (type === 'straight_line') {
+      overlayCanvas.style.display = '';
+      statsBox.style.display = 'none';
+      // Draw the perfect line (dim)
+      octx.strokeStyle = '#ccc';
+      octx.lineWidth = 2;
+      octx.beginPath();
+      octx.moveTo(30, 110);
+      octx.lineTo(190, 110);
+      octx.stroke();
+      // Draw user strokes
       octx.strokeStyle = '#000';
-      octx.fillStyle = 'transparent';
       octx.lineWidth = 2;
       octx.lineCap = 'round';
       octx.lineJoin = 'round';
-      // Include current in-progress stroke if any
+      const allStrokes = points.length > 1 ? [...strokes, points] : strokes;
+      allStrokes.forEach(s => {
+        if (s.length < 2) return;
+        octx.beginPath();
+        octx.moveTo(s[0].x, s[0].y);
+        for (let i = 1; i < s.length; i++) octx.lineTo(s[i].x, s[i].y);
+        octx.stroke();
+      });
+
+    } else if (type === 'shake') {
+      overlayCanvas.style.display = 'none';
+      statsBox.style.display = 'flex';
+      // Analyze randomness - check how many direction changes
+      let dirChanges = 0;
+      for (let i = 2; i < shakePoints.length; i++) {
+        const dx1 = shakePoints[i-1].x - shakePoints[i-2].x;
+        const dy1 = shakePoints[i-1].y - shakePoints[i-2].y;
+        const dx2 = shakePoints[i].x - shakePoints[i-1].x;
+        const dy2 = shakePoints[i].y - shakePoints[i-1].y;
+        if ((dx1 * dx2 < 0) || (dy1 * dy2 < 0)) dirChanges++;
+      }
+      const coverage = new Set(shakePoints.map(p => Math.floor(p.x / 30) + ',' + Math.floor(p.y / 30))).size;
+      if (shakePoints.length < 20) {
+        statsEl.innerHTML = 'Not enough scribbling!<br>But low effort is human too.';
+      } else if (coverage > 15 && dirChanges > shakePoints.length * 0.3) {
+        statsEl.innerHTML = 'Direction changes: ' + dirChanges + '<br>Area coverage: ' + coverage + ' zones<br>Chaotic. Very human.';
+      } else {
+        statsEl.innerHTML = 'Direction changes: ' + dirChanges + '<br>Area coverage: ' + coverage + ' zones<br>A bit orderly, but you pass.';
+      }
+
+    } else {
+      // draw / dots
+      overlayCanvas.style.display = '';
+      statsBox.style.display = 'none';
+      if (type === 'draw') {
+        octx.strokeStyle = '#ccc'; octx.fillStyle = '#ccc'; octx.lineWidth = 2;
+        currentChallenge.draw(octx);
+      } else if (type === 'dots') {
+        octx.strokeStyle = '#ccc'; octx.fillStyle = '#ccc'; octx.lineWidth = 2;
+        drawDotsConnected(octx, currentChallenge.dots);
+      }
+      octx.strokeStyle = '#000'; octx.fillStyle = 'transparent'; octx.lineWidth = 2;
+      octx.lineCap = 'round'; octx.lineJoin = 'round';
       const allStrokes = points.length > 1 ? [...strokes, points] : strokes;
       allStrokes.forEach(s => {
         if (s.length < 2) return;
@@ -615,8 +1298,11 @@
 
   // --- Submit ---
   document.getElementById('submitBtn').addEventListener('click', () => {
-    if (currentChallenge.type === 'catch') return;
-    if (strokes.length === 0 && points.length < 10) return;
+    const type = currentChallenge.type;
+    if (type === 'catch') return;
+    if (['draw', 'dots', 'straight_line', 'shake'].includes(type)) {
+      if (strokes.length === 0 && points.length < 10) return;
+    }
     showResults();
   });
 
