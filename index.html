@@ -1219,12 +1219,7 @@
       const val = currentChallenge._sliderVal || 0;
       const pct = Math.round(val * 100);
       const diff = Math.abs(pct - 50);
-      if (diff === 0) {
-        statsEl.innerHTML = 'You got: ' + pct + '%<br>Exactly 50%?!<br>That\'s suspicious...';
-        resultMsg.textContent = 'Too perfect. Suspicious.';
-      } else {
-        statsEl.innerHTML = 'You got: ' + pct + '%<br>Off by ' + diff + '%<br>Perfectly imperfect.';
-      }
+      statsEl.innerHTML = 'You got: ' + pct + '%<br>Off by ' + diff + '%';
 
     } else if (type === 'color') {
       overlayCanvas.style.display = 'none';
