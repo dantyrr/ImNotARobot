@@ -177,21 +177,35 @@
     color: #555;
   }
 
-  /* Color grid */
-  .color-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
+  /* Color match */
+  .color-target {
+    width: 60px;
+    height: 60px;
+    border: 1px solid #999;
   }
-  .color-cell {
-    width: 40px;
-    height: 40px;
+  .color-preview {
+    width: 60px;
+    height: 60px;
+    border: 1px solid #999;
+  }
+  .color-slider-wrap {
+    width: 180px;
+    position: relative;
+  }
+  .color-spectrum {
+    width: 100%;
+    height: 16px;
+    border: 1px solid #999;
     cursor: pointer;
-    border: 2px solid transparent;
-    transition: border-color 0.1s;
   }
-  .color-cell:hover {
-    border-color: #000;
+  .color-slider-thumb {
+    width: 4px;
+    height: 24px;
+    background: #000;
+    position: absolute;
+    top: -4px;
+    left: 0;
+    pointer-events: none;
   }
 
   /* Timer circle */
@@ -913,52 +927,70 @@
         '<p class="math-problem">' + prob.q + ' = ?</p>' +
         '<input type="text" id="mathInput" autocomplete="off" inputmode="numeric">' +
         '<p class="prompt-text">(any wrong answer will do)</p>';
-      drawLabel.textContent = 'A robot can\'t answer wrong on purpose:';
+      drawLabel.textContent = 'Answer this wrong:';
       buttonsRow.style.display = '';
       setTimeout(() => document.getElementById('mathInput')?.focus(), 100);
 
     } else if (type === 'slider') {
       interactiveBox.innerHTML =
         '<p class="prompt-text">Drag the slider to exactly 50%:</p>' +
-        '<div class="slider-track" id="sliderTrack"><div class="slider-thumb" id="sliderThumb"></div></div>' +
-        '<p class="slider-label" id="sliderVal">0%</p>';
-      drawLabel.textContent = 'Humans can never get exactly 50%:';
+        '<div class="slider-track" id="sliderTrack"><div class="slider-thumb" id="sliderThumb"></div></div>';
+      drawLabel.textContent = 'Drag the slider to exactly 50%:';
       buttonsRow.style.display = '';
       setupSlider();
 
     } else if (type === 'color') {
-      const baseHue = Math.floor(Math.random() * 360);
-      const baseSat = 50 + Math.floor(Math.random() * 30);
-      const baseLight = 45 + Math.floor(Math.random() * 15);
-      const oddIndex = Math.floor(Math.random() * 16);
-      const cells = [];
-      for (let i = 0; i < 16; i++) {
-        const isOdd = i === oddIndex;
-        const hShift = isOdd ? 12 + Math.floor(Math.random() * 8) : 0;
-        const lShift = isOdd ? 8 + Math.floor(Math.random() * 5) : 0;
-        const color = 'hsl(' + (baseHue + hShift) + ',' + baseSat + '%,' + (baseLight + lShift) + '%)';
-        cells.push('<div class="color-cell" data-odd="' + isOdd + '" style="background:' + color + '"></div>');
-      }
+      const targetHue = Math.floor(Math.random() * 360);
+      currentChallenge._targetHue = targetHue;
+      currentChallenge._selectedHue = 0;
+      const targetColor = 'hsl(' + targetHue + ', 70%, 50%)';
       interactiveBox.innerHTML =
-        '<p class="prompt-text">Click the slightly different color:</p>' +
-        '<div class="color-grid">' + cells.join('') + '</div>';
-      drawLabel.textContent = 'Find the odd one out:';
-      buttonsRow.style.display = 'none';
-      interactiveBox.querySelectorAll('.color-cell').forEach(cell => {
-        cell.addEventListener('click', () => {
-          const correct = cell.dataset.odd === 'true';
-          interactiveResult = { correct, type: 'color' };
-          showResults();
-        });
-      });
+        '<p class="prompt-text">Match this color:</p>' +
+        '<div class="color-target" id="colorTarget" style="background:' + targetColor + '"></div>' +
+        '<p class="prompt-text">Your pick:</p>' +
+        '<div class="color-preview" id="colorPreview" style="background:hsl(0,70%,50%)"></div>' +
+        '<div class="color-slider-wrap" id="colorSliderWrap">' +
+        '<canvas class="color-spectrum" id="colorSpectrum" width="180" height="16"></canvas>' +
+        '<div class="color-slider-thumb" id="colorThumb"></div>' +
+        '</div>';
+      drawLabel.textContent = 'Slide to match the color:';
+      buttonsRow.style.display = '';
+      // Draw spectrum
+      setTimeout(() => {
+        const specCanvas = document.getElementById('colorSpectrum');
+        const sctx = specCanvas.getContext('2d');
+        for (let x = 0; x < 180; x++) {
+          sctx.fillStyle = 'hsl(' + Math.round((x / 180) * 360) + ', 70%, 50%)';
+          sctx.fillRect(x, 0, 1, 16);
+        }
+        const wrap = document.getElementById('colorSliderWrap');
+        const thumb = document.getElementById('colorThumb');
+        const preview = document.getElementById('colorPreview');
+        let dragging = false;
+        function updateColor(clientX) {
+          const rect = specCanvas.getBoundingClientRect();
+          let pct = (clientX - rect.left) / rect.width;
+          pct = Math.max(0, Math.min(1, pct));
+          const hue = Math.round(pct * 360);
+          currentChallenge._selectedHue = hue;
+          thumb.style.left = (pct * 176) + 'px';
+          preview.style.background = 'hsl(' + hue + ', 70%, 50%)';
+        }
+        specCanvas.addEventListener('mousedown', (e) => { dragging = true; updateColor(e.clientX); });
+        document.addEventListener('mousemove', (e) => { if (dragging) updateColor(e.clientX); });
+        document.addEventListener('mouseup', () => { dragging = false; });
+        specCanvas.addEventListener('touchstart', (e) => { dragging = true; updateColor(e.touches[0].clientX); });
+        document.addEventListener('touchmove', (e) => { if (dragging) updateColor(e.touches[0].clientX); });
+        document.addEventListener('touchend', () => { dragging = false; });
+      }, 50);
 
     } else if (type === 'timer') {
       interactiveBox.innerHTML =
         '<p class="prompt-text">Wait exactly 3 seconds, then click:</p>' +
-        '<div class="timer-display" id="timerDisplay">0.000</div>' +
+        '<div class="timer-display" id="timerDisplay">—</div>' +
         '<button class="word-btn" id="timerBtn">Start</button>' +
-        '<p class="timer-sub" id="timerSub">Click Start, then click Stop at 3.000s</p>';
-      drawLabel.textContent = 'Humans have terrible internal clocks:';
+        '<p class="timer-sub" id="timerSub">Click Start, then click Stop when you think 3s is up</p>';
+      drawLabel.textContent = 'Wait exactly 3 seconds:';
       buttonsRow.style.display = 'none';
 
       let phase = 'ready'; // ready -> running -> done
@@ -969,15 +1001,12 @@
         if (phase === 'ready') {
           phase = 'running';
           btn.textContent = 'Stop';
+          display.textContent = '...';
           timerStart = Date.now();
-          timerInterval = setInterval(() => {
-            display.textContent = ((Date.now() - timerStart) / 1000).toFixed(3);
-          }, 16);
         } else if (phase === 'running') {
           phase = 'done';
-          clearInterval(timerInterval);
           const elapsed = (Date.now() - timerStart) / 1000;
-          display.textContent = elapsed.toFixed(3);
+          display.textContent = elapsed.toFixed(3) + 's';
           interactiveResult = { elapsed, diff: Math.abs(elapsed - 3), type: 'timer' };
           setTimeout(() => showResults(), 500);
         }
@@ -1014,7 +1043,6 @@
   function setupSlider() {
     const track = document.getElementById('sliderTrack');
     const thumb = document.getElementById('sliderThumb');
-    const label = document.getElementById('sliderVal');
     let dragging = false;
     currentChallenge._sliderVal = 0;
 
@@ -1024,7 +1052,6 @@
       pct = Math.max(0, Math.min(1, pct));
       thumb.style.left = (pct * (rect.width - 16)) + 'px';
       currentChallenge._sliderVal = pct;
-      label.textContent = Math.round(pct * 100) + '%';
     }
 
     track.addEventListener('mousedown', (e) => { dragging = true; updateSlider(e.clientX); });
@@ -1172,7 +1199,7 @@
       if (isNaN(answer)) {
         statsEl.innerHTML = 'You didn\'t answer.<br>That\'s... also wrong. Human.';
       } else if (correct) {
-        statsEl.innerHTML = 'You said: ' + answer + '<br>Correct answer: ' + currentChallenge._problem.a + '<br>Wrong on purpose. Very human.';
+        statsEl.innerHTML = 'You said: ' + answer + '<br>Correct answer: ' + currentChallenge._problem.a;
       } else {
         statsEl.innerHTML = 'You said: ' + answer + '<br>That\'s the RIGHT answer!<br>Suspicious...';
         resultMsg.textContent = 'Hmm, suspiciously correct.';
@@ -1194,10 +1221,16 @@
     } else if (type === 'color') {
       overlayCanvas.style.display = 'none';
       statsBox.style.display = 'flex';
-      if (interactiveResult && interactiveResult.correct) {
-        statsEl.innerHTML = 'You found it!<br>Good eyes, human.';
+      const target = currentChallenge._targetHue || 0;
+      const selected = currentChallenge._selectedHue || 0;
+      let hueDiff = Math.abs(target - selected);
+      if (hueDiff > 180) hueDiff = 360 - hueDiff;
+      if (hueDiff < 5) {
+        statsEl.innerHTML = 'Target: ' + target + '°<br>You picked: ' + selected + '°<br>Off by ' + hueDiff + '°<br>Spot on!';
+      } else if (hueDiff < 20) {
+        statsEl.innerHTML = 'Target: ' + target + '°<br>You picked: ' + selected + '°<br>Off by ' + hueDiff + '°<br>Close enough, human.';
       } else {
-        statsEl.innerHTML = 'Wrong square.<br>But robots don\'t guess, so... human.';
+        statsEl.innerHTML = 'Target: ' + target + '°<br>You picked: ' + selected + '°<br>Off by ' + hueDiff + '°<br>Not even close. Very human.';
       }
 
     } else if (type === 'timer') {
