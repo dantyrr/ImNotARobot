@@ -1233,13 +1233,7 @@
       const selected = currentChallenge._selectedHue || 0;
       let hueDiff = Math.abs(target - selected);
       if (hueDiff > 180) hueDiff = 360 - hueDiff;
-      if (hueDiff < 5) {
-        statsEl.innerHTML = 'Target: ' + target + '°<br>You picked: ' + selected + '°<br>Off by ' + hueDiff + '°<br>Spot on!';
-      } else if (hueDiff < 20) {
-        statsEl.innerHTML = 'Target: ' + target + '°<br>You picked: ' + selected + '°<br>Off by ' + hueDiff + '°<br>Close enough, human.';
-      } else {
-        statsEl.innerHTML = 'Target: ' + target + '°<br>You picked: ' + selected + '°<br>Off by ' + hueDiff + '°<br>Not even close. Very human.';
-      }
+      statsEl.innerHTML = 'Target: ' + target + '°<br>You picked: ' + selected + '°';
 
     } else if (type === 'timer') {
       overlayCanvas.style.display = 'none';
