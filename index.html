@@ -36,8 +36,6 @@
     font-weight: 700;
     color: #fff;
     margin-bottom: 1.5rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
   }
 
   h2 {
@@ -57,12 +55,10 @@
     color: #fff;
     cursor: pointer;
     border-radius: 0;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
     transition: all 0.15s;
   }
   .btn:hover {
-    background: #fff;
+    background: #f5f0e8;
     color: #000;
   }
   .btn:active {
@@ -97,14 +93,12 @@
     font-size: 0.75rem;
     margin-bottom: 0.4rem;
     color: #888;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
   }
 
   canvas {
     border: 1px solid #333;
     border-radius: 0;
-    background: #000;
+    background: #f5f0e8;
     cursor: crosshair;
     touch-action: none;
   }
@@ -129,6 +123,24 @@
     margin-bottom: 1.5rem;
   }
 
+  .stats-box {
+    width: 220px;
+    height: 220px;
+    border: 1px solid #333;
+    background: #f5f0e8;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .catch-stats {
+    font-size: 0.85rem;
+    color: #000;
+    line-height: 2;
+    text-align: center;
+  }
+
   #overlayCanvas {
     cursor: default;
     margin-bottom: 1.5rem;
@@ -145,9 +157,9 @@
 
 <!-- CHALLENGE SCREEN (start screen) -->
 <div id="challenge" class="screen active">
-  <h1>I'm Not A Robot</h1>
+  <h1>I'm Not a Robot</h1>
   <div class="challenge-area">
-    <div class="canvas-wrapper">
+    <div class="canvas-wrapper" id="referenceWrapper">
       <label>Target</label>
       <canvas id="referenceCanvas" width="220" height="220"></canvas>
     </div>
@@ -166,6 +178,9 @@
 <div id="results" class="screen">
   <p id="resultMessage" class="result-message">You are human, well done.</p>
   <canvas id="overlayCanvas" width="220" height="220"></canvas>
+  <div id="catchStatsBox" class="stats-box">
+    <p id="catchStats" class="catch-stats"></p>
+  </div>
   <div class="buttons-row">
     <button class="btn" id="retryBtn">Try Again</button>
   </div>
@@ -176,186 +191,141 @@
   const screens = { challenge: document.getElementById('challenge'), results: document.getElementById('results') };
   let drawing = false;
   let points = [];
-  let currentShape = null;
+  let currentChallenge = null;
+  let dotsImageData = null; // snapshot of dots before user draws
 
-  // --- Shapes ---
-  const shapes = [
+  // --- Draw challenges (freehand) ---
+  const drawChallenges = [
     {
-      name: 'circle',
+      type: 'draw', name: 'circle',
+      draw(ctx) { ctx.beginPath(); ctx.arc(110, 110, 75, 0, Math.PI * 2); ctx.stroke(); }
+    },
+    {
+      type: 'draw', name: 'square',
+      draw(ctx) { ctx.strokeRect(40, 40, 140, 140); }
+    },
+    {
+      type: 'draw', name: 'triangle',
+      draw(ctx) { ctx.beginPath(); ctx.moveTo(110, 30); ctx.lineTo(195, 180); ctx.lineTo(25, 180); ctx.closePath(); ctx.stroke(); }
+    },
+    {
+      type: 'draw', name: 'smiley face',
       draw(ctx) {
-        ctx.beginPath();
-        ctx.arc(110, 110, 75, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.beginPath(); ctx.arc(110, 110, 75, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(85, 90, 8, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(135, 90, 8, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(110, 115, 40, 0.2, Math.PI - 0.2); ctx.stroke();
       }
     },
     {
-      name: 'square',
+      type: 'draw', name: 'pig',
       draw(ctx) {
-        ctx.strokeRect(40, 40, 140, 140);
+        ctx.beginPath(); ctx.arc(110, 115, 65, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(65, 65); ctx.lineTo(50, 35); ctx.lineTo(80, 55); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(155, 65); ctx.lineTo(170, 35); ctx.lineTo(140, 55); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(110, 130, 25, 18, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(100, 130, 5, 4, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(120, 130, 5, 4, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(88, 100, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(132, 100, 5, 0, Math.PI * 2); ctx.fill();
       }
     },
     {
-      name: 'triangle',
+      type: 'draw', name: 'mouse',
       draw(ctx) {
-        ctx.beginPath();
-        ctx.moveTo(110, 30);
-        ctx.lineTo(195, 180);
-        ctx.lineTo(25, 180);
-        ctx.closePath();
-        ctx.stroke();
-      }
-    },
-    {
-      name: 'smiley face',
-      draw(ctx) {
-        // Head
-        ctx.beginPath();
-        ctx.arc(110, 110, 75, 0, Math.PI * 2);
-        ctx.stroke();
-        // Left eye
-        ctx.beginPath();
-        ctx.arc(85, 90, 8, 0, Math.PI * 2);
-        ctx.stroke();
-        // Right eye
-        ctx.beginPath();
-        ctx.arc(135, 90, 8, 0, Math.PI * 2);
-        ctx.stroke();
-        // Smile
-        ctx.beginPath();
-        ctx.arc(110, 115, 40, 0.2, Math.PI - 0.2);
-        ctx.stroke();
-      }
-    },
-    {
-      name: 'pig',
-      draw(ctx) {
-        // Head
-        ctx.beginPath();
-        ctx.arc(110, 115, 65, 0, Math.PI * 2);
-        ctx.stroke();
-        // Left ear
-        ctx.beginPath();
-        ctx.moveTo(65, 65);
-        ctx.lineTo(50, 35);
-        ctx.lineTo(80, 55);
-        ctx.stroke();
-        // Right ear
-        ctx.beginPath();
-        ctx.moveTo(155, 65);
-        ctx.lineTo(170, 35);
-        ctx.lineTo(140, 55);
-        ctx.stroke();
-        // Snout
-        ctx.beginPath();
-        ctx.ellipse(110, 130, 25, 18, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        // Nostrils
-        ctx.beginPath();
-        ctx.ellipse(100, 130, 5, 4, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.ellipse(120, 130, 5, 4, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        // Eyes
-        ctx.beginPath();
-        ctx.arc(88, 100, 5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(132, 100, 5, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    },
-    {
-      name: 'horse',
-      draw(ctx) {
-        // Head (long oval)
-        ctx.beginPath();
-        ctx.ellipse(110, 120, 40, 65, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        // Snout bump
-        ctx.beginPath();
-        ctx.ellipse(110, 175, 25, 18, 0, 0, Math.PI);
-        ctx.stroke();
-        // Left ear
-        ctx.beginPath();
-        ctx.moveTo(85, 60);
-        ctx.lineTo(75, 30);
-        ctx.lineTo(95, 50);
-        ctx.stroke();
-        // Right ear
-        ctx.beginPath();
-        ctx.moveTo(135, 60);
-        ctx.lineTo(145, 30);
-        ctx.lineTo(125, 50);
-        ctx.stroke();
-        // Eyes
-        ctx.beginPath();
-        ctx.arc(93, 100, 5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(127, 100, 5, 0, Math.PI * 2);
-        ctx.fill();
-        // Nostril dots
-        ctx.beginPath();
-        ctx.arc(100, 168, 3, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(120, 168, 3, 0, Math.PI * 2);
-        ctx.fill();
-        // Mane
-        ctx.beginPath();
-        ctx.moveTo(70, 55);
-        ctx.quadraticCurveTo(55, 80, 68, 110);
-        ctx.stroke();
-      }
-    },
-    {
-      name: 'mouse',
-      draw(ctx) {
-        // Body / head (round)
-        ctx.beginPath();
-        ctx.arc(110, 120, 55, 0, Math.PI * 2);
-        ctx.stroke();
-        // Left ear (big circle)
-        ctx.beginPath();
-        ctx.arc(65, 70, 30, 0, Math.PI * 2);
-        ctx.stroke();
-        // Right ear
-        ctx.beginPath();
-        ctx.arc(155, 70, 30, 0, Math.PI * 2);
-        ctx.stroke();
-        // Eyes
-        ctx.beginPath();
-        ctx.arc(93, 110, 5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(127, 110, 5, 0, Math.PI * 2);
-        ctx.fill();
-        // Nose
-        ctx.beginPath();
-        ctx.arc(110, 130, 5, 0, Math.PI * 2);
-        ctx.fill();
-        // Whiskers left
-        ctx.beginPath();
-        ctx.moveTo(80, 135);
-        ctx.lineTo(40, 128);
-        ctx.moveTo(80, 140);
-        ctx.lineTo(40, 145);
-        ctx.stroke();
-        // Whiskers right
-        ctx.beginPath();
-        ctx.moveTo(140, 135);
-        ctx.lineTo(180, 128);
-        ctx.moveTo(140, 140);
-        ctx.lineTo(180, 145);
-        ctx.stroke();
+        ctx.beginPath(); ctx.arc(110, 120, 55, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(65, 70, 30, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(155, 70, 30, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(93, 110, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(127, 110, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(110, 130, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(80, 135); ctx.lineTo(40, 128); ctx.moveTo(80, 140); ctx.lineTo(40, 145); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(140, 135); ctx.lineTo(180, 128); ctx.moveTo(140, 140); ctx.lineTo(180, 145); ctx.stroke();
       }
     }
   ];
 
-  function pickRandomShape() {
-    currentShape = shapes[Math.floor(Math.random() * shapes.length)];
+  // --- Connect-the-dots challenges (freehand draw over numbered dots) ---
+  const dotChallenges = [
+    {
+      // T-rex side profile: big head, tiny arms, thick tail, two legs
+      type: 'dots', name: 'dinosaur',
+      dots: [
+        {x:60,y:45}, {x:40,y:55}, {x:25,y:70}, {x:20,y:90}, {x:25,y:105},
+        {x:40,y:110}, {x:35,y:120}, {x:45,y:125}, {x:55,y:115},
+        {x:60,y:130}, {x:55,y:160}, {x:50,y:195}, {x:70,y:195},
+        {x:75,y:170}, {x:90,y:160}, {x:105,y:170}, {x:100,y:195},
+        {x:120,y:195}, {x:125,y:165}, {x:130,y:150}, {x:145,y:140},
+        {x:165,y:135}, {x:185,y:140}, {x:200,y:130}, {x:195,y:120},
+        {x:175,y:115}, {x:150,y:110}, {x:130,y:100}, {x:110,y:80},
+        {x:95,y:60}, {x:80,y:45}
+      ]
+    },
+    {
+      // Pig side profile: round body, snout, curly tail, short legs
+      type: 'dots', name: 'pig',
+      dots: [
+        {x:30,y:90}, {x:20,y:100}, {x:18,y:115}, {x:25,y:125},
+        {x:40,y:120}, {x:45,y:110}, {x:50,y:120}, {x:50,y:140},
+        {x:45,y:170}, {x:40,y:195}, {x:60,y:195}, {x:65,y:175},
+        {x:75,y:160}, {x:110,y:160}, {x:125,y:175}, {x:120,y:195},
+        {x:140,y:195}, {x:145,y:170}, {x:150,y:155}, {x:160,y:145},
+        {x:170,y:150}, {x:185,y:145}, {x:195,y:135}, {x:185,y:130},
+        {x:165,y:130}, {x:155,y:120}, {x:150,y:100}, {x:140,y:85},
+        {x:120,y:75}, {x:100,y:72}, {x:80,y:75}, {x:60,y:80}, {x:45,y:85}
+      ]
+    },
+    {
+      // House: simple house with roof, door, chimney
+      type: 'dots', name: 'house',
+      dots: [
+        {x:35,y:120}, {x:35,y:195}, {x:90,y:195}, {x:90,y:155},
+        {x:130,y:155}, {x:130,y:195}, {x:185,y:195}, {x:185,y:120},
+        {x:200,y:120}, {x:110,y:40}, {x:20,y:120}
+      ]
+    },
+    {
+      // Elephant side profile: big body, trunk, tusks, legs
+      type: 'dots', name: 'elephant',
+      dots: [
+        {x:30,y:70}, {x:20,y:85}, {x:15,y:105}, {x:20,y:120},
+        {x:15,y:140}, {x:10,y:165}, {x:20,y:175}, {x:30,y:155},
+        {x:35,y:135}, {x:45,y:145}, {x:45,y:170}, {x:40,y:195},
+        {x:60,y:195}, {x:65,y:170}, {x:75,y:155}, {x:105,y:155},
+        {x:115,y:170}, {x:110,y:195}, {x:130,y:195}, {x:135,y:170},
+        {x:140,y:155}, {x:160,y:155}, {x:170,y:170}, {x:165,y:195},
+        {x:185,y:195}, {x:190,y:170}, {x:195,y:150}, {x:195,y:120},
+        {x:185,y:95}, {x:170,y:78}, {x:150,y:68}, {x:125,y:62},
+        {x:100,y:58}, {x:75,y:55}, {x:55,y:55}, {x:40,y:60}
+      ]
+    },
+    {
+      // Star: classic 5-pointed star
+      type: 'dots', name: 'star',
+      dots: [
+        {x:110,y:20}, {x:125,y:80}, {x:190,y:85}, {x:140,y:125},
+        {x:160,y:190}, {x:110,y:150}, {x:60,y:190}, {x:80,y:125},
+        {x:30,y:85}, {x:95,y:80}
+      ]
+    }
+  ];
+
+  // --- Catch challenges (bouncing ball) ---
+  const catchChallenges = [
+    { type: 'catch', name: 'dot', radius: 15, speed: 2, clicks: 3 },
+    { type: 'catch', name: 'dot', radius: 12, speed: 3, clicks: 3 },
+    { type: 'catch', name: 'dot', radius: 10, speed: 4, clicks: 5 },
+  ];
+
+  const allChallenges = [...drawChallenges, ...dotChallenges, ...catchChallenges];
+
+  function pickRandomChallenge() {
+    currentChallenge = allChallenges[Math.floor(Math.random() * allChallenges.length)];
   }
+
+  // --- Catch state ---
+  let ballX, ballY, ballDX, ballDY, catchCount, catchTarget, animFrame;
+  let totalClicks, catchStartTime;
 
   // --- Navigation ---
   function showScreen(name) {
@@ -363,27 +333,59 @@
     screens[name].classList.add('active');
   }
 
-  // --- Reference drawing ---
+  // --- Elements ---
   const refCanvas = document.getElementById('referenceCanvas');
   const refCtx = refCanvas.getContext('2d');
+  const refWrapper = document.getElementById('referenceWrapper');
   const drawLabel = document.getElementById('drawLabel');
+  const drawCanvas = document.getElementById('drawCanvas');
+  const drawCtx = drawCanvas.getContext('2d');
+
+  function drawDotsConnected(ctx, dots) {
+    if (dots.length < 2) return;
+    ctx.beginPath();
+    ctx.moveTo(dots[0].x, dots[0].y);
+    for (let i = 1; i < dots.length; i++) ctx.lineTo(dots[i].x, dots[i].y);
+    ctx.closePath();
+    ctx.stroke();
+  }
+
+  function drawNumberedDots(ctx, dots) {
+    dots.forEach((dot, i) => {
+      ctx.beginPath();
+      ctx.arc(dot.x, dot.y, 8, 0, Math.PI * 2);
+      ctx.fillStyle = '#ddd';
+      ctx.fill();
+      ctx.strokeStyle = '#999';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.fillStyle = '#000';
+      ctx.font = '9px Space Mono, monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(i + 1, dot.x, dot.y);
+    });
+  }
 
   function drawReference() {
     refCtx.clearRect(0, 0, refCanvas.width, refCanvas.height);
-    refCtx.strokeStyle = '#fff';
-    refCtx.fillStyle = '#fff';
+    refCtx.strokeStyle = '#000';
+    refCtx.fillStyle = '#000';
     refCtx.lineWidth = 2;
-    currentShape.draw(refCtx);
-    drawLabel.textContent = 'Draw the ' + currentShape.name + ' here:';
+
+    if (currentChallenge.type === 'draw') {
+      refWrapper.style.display = '';
+      currentChallenge.draw(refCtx);
+      drawLabel.textContent = 'Draw the ' + currentChallenge.name + ' here:';
+    } else if (currentChallenge.type === 'dots') {
+      refWrapper.style.display = 'none';
+      drawLabel.textContent = 'Connect the dots:';
+    } else if (currentChallenge.type === 'catch') {
+      refWrapper.style.display = 'none';
+      drawLabel.textContent = 'Click the bouncing dot ' + currentChallenge.clicks + ' times:';
+    }
   }
-
-  // Pick shape and draw on load
-  pickRandomShape();
-  drawReference();
-
-  // --- Drawing canvas ---
-  const drawCanvas = document.getElementById('drawCanvas');
-  const drawCtx = drawCanvas.getContext('2d');
 
   function getPos(e) {
     const rect = drawCanvas.getBoundingClientRect();
@@ -395,11 +397,17 @@
     return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
   }
 
+  // --- Freehand drawing (works for draw and dots types) ---
   function startDraw(e) {
+    if (currentChallenge.type === 'catch') return;
     e.preventDefault();
     drawing = true;
-    points = [];
-    drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+
+    if (currentChallenge.type === 'draw') {
+      points = [];
+      drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+    }
+
     const p = getPos(e);
     points.push(p);
     drawCtx.beginPath();
@@ -407,12 +415,12 @@
   }
 
   function moveDraw(e) {
-    if (!drawing) return;
+    if (currentChallenge.type === 'catch' || !drawing) return;
     e.preventDefault();
     const p = getPos(e);
     points.push(p);
     drawCtx.lineTo(p.x, p.y);
-    drawCtx.strokeStyle = '#fff';
+    drawCtx.strokeStyle = '#000';
     drawCtx.lineWidth = 2;
     drawCtx.lineCap = 'round';
     drawCtx.lineJoin = 'round';
@@ -422,10 +430,7 @@
   }
 
   function endDraw(e) {
-    if (drawing) {
-      e.preventDefault();
-      drawing = false;
-    }
+    if (drawing) { e.preventDefault(); drawing = false; }
   }
 
   drawCanvas.addEventListener('mousedown', startDraw);
@@ -436,51 +441,194 @@
   drawCanvas.addEventListener('touchmove', moveDraw);
   drawCanvas.addEventListener('touchend', endDraw);
 
+  // --- Catch: bouncing ball ---
+  function initBall() {
+    const r = currentChallenge.radius;
+    ballX = 110;
+    ballY = 110;
+    const angle = Math.random() * Math.PI * 2;
+    const spd = currentChallenge.speed;
+    ballDX = Math.cos(angle) * spd;
+    ballDY = Math.sin(angle) * spd;
+    catchCount = 0;
+    catchTarget = currentChallenge.clicks;
+    totalClicks = 0;
+    catchStartTime = Date.now();
+  }
+
+  function animateBall() {
+    if (currentChallenge.type !== 'catch') return;
+    const w = drawCanvas.width, h = drawCanvas.height;
+    const r = currentChallenge.radius;
+
+    ballX += ballDX;
+    ballY += ballDY;
+
+    if (ballX - r <= 0 || ballX + r >= w) { ballDX *= -1; ballX = Math.max(r, Math.min(w - r, ballX)); }
+    if (ballY - r <= 0 || ballY + r >= h) { ballDY *= -1; ballY = Math.max(r, Math.min(h - r, ballY)); }
+
+    drawCtx.clearRect(0, 0, w, h);
+
+    // Draw ball
+    drawCtx.beginPath();
+    drawCtx.arc(ballX, ballY, r, 0, Math.PI * 2);
+    drawCtx.fillStyle = '#000';
+    drawCtx.fill();
+
+    // Draw counter
+    drawCtx.fillStyle = '#999';
+    drawCtx.font = '12px Space Mono, monospace';
+    drawCtx.textAlign = 'right';
+    drawCtx.textBaseline = 'top';
+    drawCtx.fillText(catchCount + ' / ' + catchTarget, w - 8, 8);
+
+    animFrame = requestAnimationFrame(animateBall);
+  }
+
+  function stopBall() {
+    if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+  }
+
+  function handleCatchAt(p) {
+    totalClicks++;
+    const dist = Math.sqrt((p.x - ballX) ** 2 + (p.y - ballY) ** 2);
+    if (dist <= currentChallenge.radius + 5) {
+      catchCount++;
+      ballDX *= 1.15;
+      ballDY *= 1.15;
+
+      if (catchCount >= catchTarget) {
+        stopBall();
+        showResults();
+      }
+    }
+  }
+
+  drawCanvas.addEventListener('click', (e) => {
+    if (currentChallenge.type !== 'catch') return;
+    handleCatchAt(getPos(e));
+  });
+  drawCanvas.addEventListener('touchstart', (e) => {
+    if (currentChallenge.type !== 'catch') return;
+    e.preventDefault();
+    handleCatchAt(getPos(e));
+  });
+
+  // --- Clear ---
   function clearDrawing() {
     points = [];
     drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+    if (currentChallenge.type === 'dots') {
+      drawNumberedDots(drawCtx, currentChallenge.dots);
+      dotsImageData = drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height);
+    } else if (currentChallenge.type === 'catch') {
+      stopBall();
+      initBall();
+      animateBall();
+    }
   }
 
   document.getElementById('clearBtn').addEventListener('click', clearDrawing);
 
-  // --- Submit ---
-  document.getElementById('submitBtn').addEventListener('click', () => {
-    if (points.length < 10) return;
+  // --- Setup challenge ---
+  const buttonsRow = document.querySelector('.buttons-row');
 
+  function setupChallenge() {
+    stopBall();
+    drawReference();
+    points = [];
+    drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+
+    if (currentChallenge.type === 'catch') {
+      drawCanvas.style.cursor = 'pointer';
+      buttonsRow.style.display = 'none';
+      initBall();
+      animateBall();
+    } else {
+      drawCanvas.style.cursor = 'crosshair';
+      buttonsRow.style.display = '';
+      if (currentChallenge.type === 'dots') {
+        drawNumberedDots(drawCtx, currentChallenge.dots);
+        dotsImageData = drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height);
+      }
+    }
+  }
+
+  // Pick and setup on load
+  pickRandomChallenge();
+  setupChallenge();
+
+  // --- Show results ---
+  function showResults() {
+    stopBall();
     const overlayCanvas = document.getElementById('overlayCanvas');
     const octx = overlayCanvas.getContext('2d');
     octx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+    const statsEl = document.getElementById('catchStats');
+    const statsBox = document.getElementById('catchStatsBox');
 
-    // Reference shape (dim)
-    octx.strokeStyle = '#333';
-    octx.fillStyle = '#333';
-    octx.lineWidth = 2;
-    currentShape.draw(octx);
+    if (currentChallenge.type === 'catch') {
+      overlayCanvas.style.display = 'none';
+      statsBox.style.display = 'flex';
+      const elapsed = ((Date.now() - catchStartTime) / 1000).toFixed(1);
+      const accuracy = Math.round((catchCount / totalClicks) * 100);
+      statsEl.innerHTML = 'Time: ' + elapsed + 's<br>Accuracy: ' + catchCount + '/' + totalClicks + ' (' + accuracy + '%)';
+    } else {
+      overlayCanvas.style.display = '';
+      statsBox.style.display = 'none';
 
-    // User drawing
-    if (points.length > 1) {
-      octx.beginPath();
-      octx.moveTo(points[0].x, points[0].y);
-      for (let i = 1; i < points.length; i++) {
-        octx.lineTo(points[i].x, points[i].y);
+      if (currentChallenge.type === 'draw') {
+        octx.strokeStyle = '#ccc';
+        octx.fillStyle = '#ccc';
+        octx.lineWidth = 2;
+        currentChallenge.draw(octx);
+
+        if (points.length > 1) {
+          octx.beginPath();
+          octx.moveTo(points[0].x, points[0].y);
+          for (let i = 1; i < points.length; i++) octx.lineTo(points[i].x, points[i].y);
+          octx.strokeStyle = '#000';
+          octx.fillStyle = 'transparent';
+          octx.lineWidth = 2;
+          octx.lineCap = 'round';
+          octx.lineJoin = 'round';
+          octx.stroke();
+        }
+      } else if (currentChallenge.type === 'dots') {
+        octx.strokeStyle = '#ccc';
+        octx.fillStyle = '#ccc';
+        octx.lineWidth = 2;
+        drawDotsConnected(octx, currentChallenge.dots);
+
+        if (points.length > 1) {
+          octx.beginPath();
+          octx.moveTo(points[0].x, points[0].y);
+          for (let i = 1; i < points.length; i++) octx.lineTo(points[i].x, points[i].y);
+          octx.strokeStyle = '#000';
+          octx.fillStyle = 'transparent';
+          octx.lineWidth = 2;
+          octx.lineCap = 'round';
+          octx.lineJoin = 'round';
+          octx.stroke();
+        }
       }
-      octx.strokeStyle = '#fff';
-      octx.fillStyle = 'transparent';
-      octx.lineWidth = 2;
-      octx.lineCap = 'round';
-      octx.lineJoin = 'round';
-      octx.stroke();
     }
 
     showScreen('results');
+  }
+
+  // --- Submit ---
+  document.getElementById('submitBtn').addEventListener('click', () => {
+    if (currentChallenge.type === 'catch') return;
+    if (points.length < 10) return;
+    showResults();
   });
 
   // --- Retry ---
   document.getElementById('retryBtn').addEventListener('click', () => {
-    pickRandomShape();
+    pickRandomChallenge();
     showScreen('challenge');
-    drawReference();
-    clearDrawing();
+    setupChallenge();
   });
 </script>
 </body>
