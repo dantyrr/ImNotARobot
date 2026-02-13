@@ -1292,25 +1292,21 @@
       });
 
     } else if (type === 'shake') {
-      overlayCanvas.style.display = 'none';
-      statsBox.style.display = 'flex';
-      // Analyze randomness - check how many direction changes
-      let dirChanges = 0;
-      for (let i = 2; i < shakePoints.length; i++) {
-        const dx1 = shakePoints[i-1].x - shakePoints[i-2].x;
-        const dy1 = shakePoints[i-1].y - shakePoints[i-2].y;
-        const dx2 = shakePoints[i].x - shakePoints[i-1].x;
-        const dy2 = shakePoints[i].y - shakePoints[i-1].y;
-        if ((dx1 * dx2 < 0) || (dy1 * dy2 < 0)) dirChanges++;
-      }
-      const coverage = new Set(shakePoints.map(p => Math.floor(p.x / 30) + ',' + Math.floor(p.y / 30))).size;
-      if (shakePoints.length < 20) {
-        statsEl.innerHTML = 'Not enough scribbling!<br>But low effort is human too.';
-      } else if (coverage > 15 && dirChanges > shakePoints.length * 0.3) {
-        statsEl.innerHTML = 'Direction changes: ' + dirChanges + '<br>Area coverage: ' + coverage + ' zones<br>Chaotic. Very human.';
-      } else {
-        statsEl.innerHTML = 'Direction changes: ' + dirChanges + '<br>Area coverage: ' + coverage + ' zones<br>A bit orderly, but you pass.';
-      }
+      overlayCanvas.style.display = '';
+      statsBox.style.display = 'none';
+      // Draw the user's scribble on overlay
+      octx.strokeStyle = '#000';
+      octx.lineWidth = 2;
+      octx.lineCap = 'round';
+      octx.lineJoin = 'round';
+      const allStrokes = points.length > 1 ? [...strokes, points] : strokes;
+      allStrokes.forEach(s => {
+        if (s.length < 2) return;
+        octx.beginPath();
+        octx.moveTo(s[0].x, s[0].y);
+        for (let i = 1; i < s.length; i++) octx.lineTo(s[i].x, s[i].y);
+        octx.stroke();
+      });
 
     } else {
       // draw / dots
